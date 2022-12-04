@@ -1,0 +1,110 @@
+# Day 3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Section
+
+```elixir
+text_area_input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule Day3 do
+  @input Kino.Input.read(text_area_input)
+
+  a = ?a..?z |> Stream.with_index(1)
+  b = ?A..?Z |> Stream.with_index(Enum.count(a) + 1)
+
+  @score Stream.concat(a, b)
+         |> Enum.map(fn {c, i} -> {String.Chars.BitString.to_string(<<c>>), i} end)
+         |> Enum.reduce(%{}, fn {char, score}, acc ->
+           Map.merge(acc, %{char => score})
+         end)
+
+  defp parse_input_part_one() do
+    @input
+    |> String.split("\n")
+    |> Enum.map(fn s ->
+      String.split_at(s, String.length(s) |> Integer.floor_div(2))
+      |> Tuple.to_list()
+      |> Enum.map(fn a ->
+        String.split(a, "", trim: true)
+        |> Enum.frequencies()
+      end)
+    end)
+  end
+
+  defp parse_input_part_two() do
+    @input
+    |> String.split("\n")
+    |> Enum.map(fn s ->
+      String.split(s, "", trim: true)
+      |> Enum.frequencies()
+    end)
+    |> Enum.chunk_every(3)
+  end
+
+  defp find_dup([map1, map2]) do
+    Map.keys(map1)
+    |> Enum.reduce_while(nil, fn key, acc ->
+      cond do
+        Map.has_key?(map2, key) -> {:halt, key}
+        true -> {:cont, acc}
+      end
+    end)
+  end
+
+  defp find_dup([map1, map2, map3]) do
+    Map.keys(map1)
+    |> Enum.reduce_while(nil, fn key, acc ->
+      cond do
+        Map.has_key?(map2, key) and Map.has_key?(map3, key) -> {:halt, key}
+        true -> {:cont, acc}
+      end
+    end)
+  end
+
+  defp get_score(char) do
+    Map.get(@score, char)
+  end
+
+  def result_part_one() do
+    parse_input_part_one()
+    |> Enum.map(&find_dup/1)
+    |> Enum.map(&get_score/1)
+    |> Enum.reduce(0, fn score, acc -> score + acc end)
+  end
+
+  def result_part_two() do
+    parse_input_part_two()
+    |> Enum.map(&find_dup/1)
+    |> Enum.map(&get_score/1)
+    |> Enum.reduce(0, fn score, acc -> score + acc end)
+  end
+end
+
+Day3.result_part_one()
+Day3.result_part_two()
+```
+
+```elixir
+ExUnit.start()
+
+defmodule TestDay3 do
+  use ExUnit.Case
+
+  test "part one" do
+    assert Day3.result_part_one() == 8176
+  end
+
+  test "part two" do
+    assert Day3.result_part_two() == 2689
+  end
+end
+
+ExUnit.run()
+```

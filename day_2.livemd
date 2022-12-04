@@ -1,0 +1,124 @@
+# Day2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+defmodule PartOne do
+  @win 6
+  @loss 0
+  @draw 3
+  @rock 1
+  @paper 2
+  @scissor 3
+
+  defp parse1(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn el ->
+      String.split(el)
+      |> Enum.map(&map(&1))
+    end)
+  end
+
+  defp parse2(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn el ->
+      String.split(el)
+      |> Enum.map(&map2(&1))
+    end)
+  end
+
+  defp map(el) do
+    case el do
+      "A" -> "Rock"
+      "X" -> "Rock"
+      "B" -> "Paper"
+      "Y" -> "Paper"
+      "C" -> "Scissor"
+      "Z" -> "Scissor"
+    end
+  end
+
+  defp map2(el) do
+    case el do
+      "A" -> "Rock"
+      "X" -> "lose"
+      "B" -> "Paper"
+      "Y" -> "draw"
+      "C" -> "Scissor"
+      "Z" -> "win"
+    end
+  end
+
+  defp checkScore(val) do
+    case val do
+      ["Rock", "Paper"] -> @paper + @win
+      ["Rock", "Rock"] -> @rock + @draw
+      ["Rock", "Scissor"] -> @loss + @scissor
+      ["Paper", "Paper"] -> @paper + @draw
+      ["Paper", "Rock"] -> @loss + @rock
+      ["Paper", "Scissor"] -> @scissor + @win
+      ["Scissor", "Paper"] -> @loss + @paper
+      ["Scissor", "Rock"] -> @rock + @win
+      ["Scissor", "Scissor"] -> @scissor + @draw
+      ["Rock", "lose"] -> @scissor + @loss
+      ["Rock", "win"] -> @paper + @win
+      ["Rock", "draw"] -> @rock + @draw
+      ["Paper", "lose"] -> @rock + @loss
+      ["Paper", "win"] -> @scissor + @win
+      ["Paper", "draw"] -> @paper + @draw
+      ["Scissor", "lose"] -> @paper + @loss
+      ["Scissor", "win"] -> @rock + @win
+      ["Scissor", "draw"] -> @scissor + @draw
+    end
+  end
+
+  def result1(data) do
+    parse1(data) |> Enum.reduce(0, fn val, acc -> checkScore(val) + acc end)
+  end
+
+  def result2(data) do
+    parse2(data) |> Enum.reduce(0, fn val, acc -> checkScore(val) + acc end)
+  end
+end
+```
+
+## Test
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule Day2Test do
+  use ExUnit.Case, async: true
+  @input input
+
+  setup do
+    %{data: Kino.Input.read(@input)}
+  end
+
+  test "part one", %{data: data} do
+    assert PartOne.result1(data) == 15422
+  end
+
+  test "part two", %{data: data} do
+    assert PartOne.result2(data) == 15442
+  end
+end
+
+ExUnit.run()
+```

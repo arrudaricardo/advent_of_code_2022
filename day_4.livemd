@@ -1,0 +1,54 @@
+# Day 4
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule AOC do
+  @input Kino.Input.read(input)
+
+  defp parse(row_input) do
+    row_input
+    |> String.split("\n")
+    |> Enum.map(fn s ->
+      String.split(s, ",")
+      |> Enum.map(fn s ->
+        String.split(s, "-")
+      end)
+      |> Enum.map(fn [a, b] ->
+        Range.new(String.to_integer(a), String.to_integer(b)) |> Enum.to_list()
+      end)
+    end)
+  end
+
+  def run(input \\ @input) do
+    part_one =
+      input
+      |> parse
+      |> Enum.count(fn [a, b] ->
+        a -- b == [] or b -- a == []
+      end)
+
+    part_two =
+      input
+      |> parse
+      |> Enum.count(fn [a, b] ->
+        intersect = MapSet.intersection(MapSet.new(a), MapSet.new(b))
+        not Enum.empty?(intersect)
+      end)
+
+    IO.puts("Part one result: #{part_one}\nPart two result: #{part_two}")
+  end
+end
+
+AOC.run()
+```
