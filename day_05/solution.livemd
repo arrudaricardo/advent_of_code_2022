@@ -1,0 +1,129 @@
+# Day 5
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input:")
+```
+
+```elixir
+defmodule AOC do
+  @input Kino.Input.read(input)
+
+  def parse() do
+    [containers_s, moves] = @input |> String.split("\n\n")
+
+    containers =
+      String.split(containers_s, "\n", trim: true, part: 1)
+      |> Enum.drop(-1)
+      |> Enum.map(
+        &(String.replace(&1, "    ", "[_]")
+          |> String.replace(" ", "")
+          |> String.split(~r{\[\w\]}, trim: true, include_captures: true)
+          |> Enum.map(fn el -> String.replace(el, ["[", "]"], "") end)
+          |> Enum.with_index(1))
+      )
+      |> List.flatten()
+      |> Enum.reduce(%{}, fn {w, i}, acc ->
+        cond do
+          w == "_" -> acc
+          true -> Map.put(acc, i, [w] ++ Map.get(acc, i, []))
+        end
+      end)
+
+    moves_parsed =
+      moves
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn el ->
+        String.split(el, " ") |> Enum.drop_every(2) |> Enum.map(&String.to_integer/1)
+      end)
+
+    {containers, moves_parsed}
+  end
+
+  defp move_cont_normal(c, [_, from, to]) when from == to, do: c
+  defp move_cont_normal(c, [0, from, to]), do: c
+
+  defp move_cont_normal(c, [move, from, to]) do
+    from_list = Map.get(c, from)
+    {pop, new_from_list} = List.pop_at(from_list, -1)
+    to_list = Map.get(c, to)
+
+    case pop do
+      nil ->
+        c
+
+      _ ->
+        move_cont_normal(
+          Map.put(c, from, new_from_list) |> Map.put(to, Enum.concat(to_list, [pop])),
+          [
+            move - 1,
+            from,
+            to
+          ]
+        )
+    end
+  end
+
+  defp move_cont_9001(c, [_, from, to]) when from == to, do: c
+  defp move_cont_9001(c, [0, from, to], group), do: c
+
+  defp move_cont_9001(c, [move, from, to]) do
+    from_list = Map.get(c, from)
+
+    new_from_list =
+      cond do
+        move == 1 -> Enum.slice(from_list, -1, 1)
+        true -> Enum.slice(from_list, (move * -1)..-1)
+      end
+
+    to_list = Map.get(c, to)
+    dbg(from)
+    # dbg new_from_list
+    # dbg to_list
+    c
+    |> Map.put(from, Enum.drop(from_list, -move))
+    |> Map.put(to, Map.get(c, to) ++ new_from_list)
+    |> dbg
+  end
+
+  def get_result(c) do
+    c
+    |> Map.values()
+    |> Enum.reduce("", fn el, acc ->
+      acc <> List.last(el)
+    end)
+  end
+
+  def part_one({c, m} \\ parse()) do
+    res =
+      Enum.reduce(m, c, fn el, acc ->
+        move_cont_normal(acc, el)
+      end)
+
+    get_result(res)
+  end
+
+  def part_two({c, m} \\ parse()) do
+    res =
+      Enum.reduce(m, c, fn el, acc ->
+        move_cont_9001(acc, el)
+      end)
+
+    get_result(res)
+  end
+end
+
+# AOC.part_one()
+AOC.part_two()
+```
+
+```elixir
+Enum.slice(["M", "C", "D"], -2..-1)
+```
