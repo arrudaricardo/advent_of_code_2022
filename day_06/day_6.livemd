@@ -1,0 +1,79 @@
+# Day 6
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.8.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule AOC do
+  def has_duplicates?(list) do
+    list
+    |> Enum.reduce_while([], fn x, acc ->
+      if x in acc, do: {:halt, false}, else: {:cont, [x | acc]}
+    end)
+    |> is_boolean()
+  end
+
+  def run(input, size) do
+    input
+    |> String.graphemes()
+    |> Enum.with_index(1)
+    |> Enum.reduce_while([], fn {code, index}, acc ->
+      cond do
+        length(acc) <= size ->
+          {:cont, acc ++ [code]}
+
+        true ->
+          case has_duplicates?([code | acc]) do
+            false -> {:halt, index}
+            true -> {:cont, List.pop_at(acc, 0) |> elem(1) |> Kernel.++([code])}
+          end
+      end
+
+      # :cont, acc + x}, else: {:halt, acc}
+    end)
+  end
+end
+
+res_one = AOC.run(Kino.Input.read(input), 2)
+res_two = AOC.run(Kino.Input.read(input), 12)
+
+IO.puts("
+  Solution part one: #{res_one}
+  Solution part two: #{res_two}
+")
+```
+
+```elixir
+ExUnit.start()
+
+defmodule Test do
+  use ExUnit.Case
+
+  test "part one" do
+    assert AOC.run("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 2) == 7
+    assert AOC.run("bvwbjplbgvbhsrlpgdmjqwftvncz", 2) == 5
+    assert AOC.run("nppdvjthqldpwncqszvftbrmjlhg", 2) == 6
+    assert AOC.run("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 2) == 10
+    assert AOC.run("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 2) == 11
+  end
+
+  test "part dois" do
+    assert AOC.run("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 12) == 19
+    assert AOC.run("bvwbjplbgvbhsrlpgdmjqwftvncz", 12) == 23
+    assert AOC.run("nppdvjthqldpwncqszvftbrmjlhg", 12) == 23
+    assert AOC.run("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 12) == 29
+    assert AOC.run("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 12) == 26
+  end
+end
+
+ExUnit.run()
+```
